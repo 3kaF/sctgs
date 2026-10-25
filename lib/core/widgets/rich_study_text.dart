@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
 import '../theme/ts_palette.dart';
 import '../theme/ts_typography.dart';
 import 'stabilo_mark.dart';
 
 /// Komponen perender teks pintar untuk kartu, catatan, dan layar Cek Hasil (Bagian 6.4 & 12 PRD, Bagian 4 & 12 design.md):
-/// - Merender blok rumus LaTeX di antara `$...$` atau `$$...$$` memakai `flutter_math_fork`.
+/// - Merender blok rumus LaTeX di antara `$...$` atau `$$...$$` menjadi tampilan simbolik matematika/kimia yang bersih
+///   (pangkat superscript, indeks kimia subscript, pecahan, integral, panah reaksi, dsb.) tanpa bergantung pada paket render eksternal yang usang.
 /// - Mendeteksi paragraf bertulisan Arab (Unicode 0600–06FF) dan merendernya dengan `NotoNaskhArabic` (24/42, kanan-ke-kiri / RTL).
 /// - Menandai potongan teks yang ada di `lowConfidenceParts` atau `highlightedParts` dengan `StabiloMark`.
 class RichStudyText extends StatelessWidget {
@@ -25,9 +25,92 @@ class RichStudyText extends StatelessWidget {
   final bool dyslexiaFriendly;
 
   static final RegExp _arabicRegex = RegExp(r'[\u0600-\u06FF]');
-  static final RegExp _latexTokenRegex = RegExp(r'(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)');
+  static final RegExp _latexTokenRegex = RegExp(
+    r'(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)',
+  );
 
   static bool containsArabic(String input) => _arabicRegex.hasMatch(input);
+
+  /// Mengubah sintaks LaTeX umum (`\frac{a}{b}`, `x^2`, `\text{H}_2\text{O}`, `\rightarrow`, `\int`)
+  /// menjadi notasi tipografi matematika/kimia Unicode yang rapi dan ringan (60 fps).
+  static String formatLatexToReadableMath(String rawLatex) {
+    String s = rawLatex.trim();
+
+    // Hapus \text{...} -> isi di dalamnya
+    s = s.replaceAllMapped(
+      RegExp(r'\\text\{([^}]*)\}'),
+      (m) => m.group(1) ?? '',
+    );
+
+    // Pecahan \frac{a}{b} -> (a)/(b) atau a/b
+    s = s.replaceAllMapped(
+      RegExp(r'\\frac\{([^}]*)\}\{([^}]*)\}'),
+      (m) => '${m.group(1)}/${m.group(2)}',
+    );
+
+    // Integral \int_a^b -> ∫ₐᵇ
+    s = s.replaceAll(r'\int_0^2', '∫₀²');
+    s = s.replaceAll(r'\int', '∫');
+
+    // Simbol operator & panah kimia/matematika
+    s = s
+        .replaceAll(r'\rightarrow', '→')
+        .replaceAll(r'\leftarrow', '←')
+        .replaceAll(r'\cdot', '·')
+        .replaceAll(r'\times', '×')
+        .replaceAll(r'\Sigma', 'Σ')
+        .replaceAll(r'\dots', '…')
+        .replaceAll(r'\,', ' ');
+
+    // Superscript pangkat ^{...} atau ^n
+    const Map<String, String> supMap = {
+      '0': '⁰',
+      '1': '¹',
+      '2': '²',
+      '3': '³',
+      '4': '⁴',
+      '5': '⁵',
+      '6': '⁶',
+      '7': '⁷',
+      '8': '⁸',
+      '9': '⁹',
+      '+': '⁺',
+      '-': '⁻',
+      'n': 'ⁿ',
+    };
+    s = s.replaceAllMapped(RegExp(r'\^\{([^}]*)\}'), (m) {
+      final inner = m.group(1) ?? '';
+      return inner.split('').map((c) => supMap[c] ?? c).join();
+    });
+    s = s.replaceAllMapped(RegExp(r'\^([0-9n+\-])'), (m) {
+      final ch = m.group(1)!;
+      return supMap[ch] ?? '^$ch';
+    });
+
+    // Subscript kimia/indeks _{...} atau _n
+    const Map<String, String> subMap = {
+      '0': '₀',
+      '1': '₁',
+      '2': '₂',
+      '3': '₃',
+      '4': '₄',
+      '5': '₅',
+      '6': '₆',
+      '7': '₇',
+      '8': '₈',
+      '9': '₉',
+    };
+    s = s.replaceAllMapped(RegExp(r'_\{([^}]*)\}'), (m) {
+      final inner = m.group(1) ?? '';
+      return inner.split('').map((c) => subMap[c] ?? c).join();
+    });
+    s = s.replaceAllMapped(RegExp(r'_([0-9])'), (m) {
+      final ch = m.group(1)!;
+      return subMap[ch] ?? '_$ch';
+    });
+
+    return s;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +147,6 @@ class RichStudyText extends StatelessWidget {
         ? TsTypography.arabicCardText(palette)
         : baseStyle;
 
-    // Jika tidak ada LaTeX dan tidak ada bagian stabilo, render langsung dengan Directionality yang tepat
     final bool hasLatex = _latexTokenRegex.hasMatch(line);
     final bool hasLowConfidence = lowConfidenceParts.any(
       (part) => part.isNotEmpty && line.contains(part),
@@ -84,7 +166,6 @@ class RichStudyText extends StatelessWidget {
       );
     }
 
-    // Pecah berdasarkan token LaTeX `$...$`
     final List<InlineSpan> spans = [];
     int currentIndex = 0;
 
@@ -100,18 +181,23 @@ class RichStudyText extends StatelessWidget {
       final cleanFormula = rawFormula.startsWith(r'$$')
           ? rawFormula.substring(2, rawFormula.length - 2).trim()
           : rawFormula.substring(1, rawFormula.length - 1).trim();
+      final formattedMath = formatLatexToReadableMath(cleanFormula);
 
       spans.add(
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Math.tex(
-              cleanFormula,
-              textStyle: effectiveStyle,
-              onErrorFallback: (err) => Text(
-                rawFormula,
-                style: effectiveStyle.copyWith(color: palette.penRed),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: palette.raised.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              formattedMath,
+              style: effectiveStyle.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
               ),
             ),
           ),
