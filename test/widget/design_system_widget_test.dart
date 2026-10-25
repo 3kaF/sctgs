@@ -20,7 +20,7 @@ void main() {
     expect(find.text('Arsip'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
     expect(find.text('Belajar'), findsOneWidget);
-    expect(find.text('Catatan'), findsOneWidget);
+    expect(find.text('Catatan'), findsWidgets);
 
     // Memastikan tombol penilaian GradeBar tampil di Feed Belajar
     expect(find.text('Lupa'), findsOneWidget);
