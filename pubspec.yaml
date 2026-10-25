@@ -29,7 +29,7 @@ dependencies:
   # UI, Typography, Icons & Math Rendering
   phosphor_flutter: ^2.1.0
   flutter_math_fork: ^0.7.2
-  intl: ^0.19.0
+  intl: any
 
   # Camera, Image Compression & Offline OCR Fallback
   image_picker: ^1.1.2

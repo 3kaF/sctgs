@@ -34,6 +34,7 @@ jobs:
           touch assets/fonts/.gitkeep assets/audio/.gitkeep
           if [ ! -d "android" ]; then
             flutter create --platforms=android --org id.tugasscroll --project-name tugasscroll .
+            rm -f test/widget_test.dart
           fi
 
       - name: Install dependencies
