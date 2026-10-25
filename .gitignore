@@ -1,0 +1,33 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Environment & Secrets
+.env
+.env.*
+*.jks
+*.keystore
+key.properties
+google-services.json
+GoogleService-Info.plist
+
+# Antigravity / System files in root
+.bash_history
+.bashrc
+.profile
+.cache/
+.config/
+.gemini/
+.local/
+.npm/
