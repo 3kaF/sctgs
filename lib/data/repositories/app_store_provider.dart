@@ -827,6 +827,10 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
     );
   }
 
+  void resetOnboarding() {
+    state = state.copyWith(onboardingCompleted: false);
+  }
+
   /// Menghapus semua data lokal (tugas, kartu, catatan) sesuai Bagian 13 PRD.
   void clearAllUserData() {
     state = state.copyWith(

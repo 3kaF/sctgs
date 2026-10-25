@@ -9,6 +9,7 @@ import 'data/repositories/app_store_provider.dart';
 import 'features/archive/archive_screen.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/notes/notes_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'features/scan/scan_screen.dart';
 import 'features/settings/settings_screen.dart';
 
@@ -41,7 +42,9 @@ class TugasScrollApp extends ConsumerWidget {
         Locale('id', 'ID'),
         Locale('en', 'US'),
       ],
-      home: const TugasScrollShell(),
+      home: store.onboardingCompleted
+          ? const TugasScrollShell()
+          : const OnboardingScreen(),
     );
   }
 }

@@ -325,6 +325,14 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () {
+                  notifier.resetOnboarding();
+                },
+                icon: const Icon(PhosphorIconsRegular.compass, size: 18),
+                label: const Text('Buka ulang onboarding (3 langkah)'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
                   notifier.clearAllUserData();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
