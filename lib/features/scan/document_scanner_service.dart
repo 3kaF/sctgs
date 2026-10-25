@@ -30,6 +30,8 @@ class DocumentScannerService {
   /// Mengambil foto dari kamera atau galeri, mengompres tanpa EXIF, lalu membaca isinya.
   Future<List<ScannedQuestionItem>?> pickAndProcessPage({
     required ImageSource source,
+    String primaryModel = 'google/gemini-2.0-flash-exp:free',
+    String fallbackModel = 'qwen/qwen2.5-vl-72b-instruct:free',
   }) async {
     try {
       final XFile? picked = await _picker.pickImage(
@@ -46,7 +48,11 @@ class DocumentScannerService {
       final String base64Img = base64Encode(compressedBytes);
 
       try {
-        final items = await _aiService.scanTaskImages([base64Img]);
+        final items = await _aiService.scanTaskImages(
+          [base64Img],
+          primaryModel: primaryModel,
+          fallbackModel: fallbackModel,
+        );
         if (items.isNotEmpty) return items;
       } catch (_) {
         // Lanjut ke fallback OCR on-device (Google ML Kit)

@@ -322,25 +322,53 @@ class NoteModel {
   }
 }
 
-/// Model Track Musik Latar (`tracks`).
+/// Model Track Musik Latar (`tracks`) bergaya pemilih audio Instagram (Bagian 10 `design.md`).
 class MusicTrackModel {
   const MusicTrackModel({
     required this.id,
     required this.title,
+    required this.artist,
     required this.playlistName,
     required this.subjectColorKey,
-    required this.sourceType, // bundled | local_file
+    required this.sourceType, // bundled | stream_cc0 | local_file
     required this.uri,
     required this.licenseNote,
     required this.durationSec,
+    this.isBookmarked = false,
   });
 
   final String id;
   final String title;
+  final String artist;
   final String playlistName;
   final String subjectColorKey;
   final String sourceType;
   final String uri;
   final String licenseNote;
   final int durationSec;
+  final bool isBookmarked;
+
+  /// Format durasi `m:ss` seperti di daftar musik Instagram (mis. `3:21` atau `2:43`).
+  String get formattedDuration {
+    final int minutes = durationSec ~/ 60;
+    final int seconds = durationSec % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  MusicTrackModel copyWith({
+    bool? isBookmarked,
+  }) {
+    return MusicTrackModel(
+      id: id,
+      title: title,
+      artist: artist,
+      playlistName: playlistName,
+      subjectColorKey: subjectColorKey,
+      sourceType: sourceType,
+      uri: uri,
+      licenseNote: licenseNote,
+      durationSec: durationSec,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
+    );
+  }
 }

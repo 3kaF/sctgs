@@ -32,6 +32,9 @@ class AppStoreState {
     required this.isMiniPlayerVisible,
     required this.sleepTimerMinutes,
     required this.offlineAiQueueCount,
+    required this.openRouterModel,
+    required this.openRouterFallbackModel,
+    required this.hasOpenRouterKey,
   });
 
   final String localUserId;
@@ -55,6 +58,9 @@ class AppStoreState {
   final bool isMiniPlayerVisible;
   final int? sleepTimerMinutes;
   final int offlineAiQueueCount;
+  final String openRouterModel;
+  final String openRouterFallbackModel;
+  final bool hasOpenRouterKey;
 
   MusicTrackModel get currentTrack =>
       tracks[currentTrackIndex.clamp(0, tracks.length - 1)];
@@ -104,6 +110,9 @@ class AppStoreState {
     int? sleepTimerMinutes,
     bool clearSleepTimer = false,
     int? offlineAiQueueCount,
+    String? openRouterModel,
+    String? openRouterFallbackModel,
+    bool? hasOpenRouterKey,
   }) {
     return AppStoreState(
       localUserId: localUserId,
@@ -128,6 +137,10 @@ class AppStoreState {
           ? null
           : (sleepTimerMinutes ?? this.sleepTimerMinutes),
       offlineAiQueueCount: offlineAiQueueCount ?? this.offlineAiQueueCount,
+      openRouterModel: openRouterModel ?? this.openRouterModel,
+      openRouterFallbackModel:
+          openRouterFallbackModel ?? this.openRouterFallbackModel,
+      hasOpenRouterKey: hasOpenRouterKey ?? this.hasOpenRouterKey,
     );
   }
 }
@@ -466,37 +479,86 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       ),
     ];
 
-    // Track musik bebas royalti bawaan per mapel (Bagian 6.7 PRD & Bagian 10 design.md)
+    // Katalog musik bebas royalti bawaan + streaming CC0 bergaya pemilih audio Instagram (Bagian 10 design.md)
     const tracks = <MusicTrackModel>[
       MusicTrackModel(
         id: 'trk-1',
-        title: 'Lo-fi malam (Matematika)',
+        title: 'Lo-fi malam',
+        artist: 'TugasScroll Studio · Matematika',
         playlistName: 'Matematika · Lo-fi tenang',
         subjectColorKey: 'matematika',
         sourceType: 'bundled',
         uri: 'assets/audio/lofi_malam.wav',
-        licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
         durationSec: 164,
+        isBookmarked: true,
       ),
       MusicTrackModel(
         id: 'trk-2',
-        title: 'Hujan di jendela (Kimia)',
+        title: 'Hujan di jendela',
+        artist: 'Ambient Lab · Kimia',
         playlistName: 'Kimia · Ambient fokus',
         subjectColorKey: 'kimia',
         sourceType: 'bundled',
         uri: 'assets/audio/hujan_ambient.wav',
-        licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
         durationSec: 192,
+        isBookmarked: true,
       ),
       MusicTrackModel(
         id: 'trk-3',
-        title: 'Perpustakaan sore (Sejarah & Bahasa)',
+        title: 'Perpustakaan sore',
+        artist: 'Kertas Folio · Sejarah & Bahasa',
         playlistName: 'Membaca panjang · Akustik',
         subjectColorKey: 'ips',
         sourceType: 'bundled',
         uri: 'assets/audio/perpustakaan_sore.wav',
-        licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
         durationSec: 148,
+      ),
+      MusicTrackModel(
+        id: 'trk-4',
+        title: 'Catatan tengah malam',
+        artist: 'Kapur & Tinta · Fisika',
+        playlistName: 'Fisika · Lo-fi ketukan pelan',
+        subjectColorKey: 'fisika',
+        sourceType: 'bundled',
+        uri: 'assets/audio/lofi_malam.wav',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
+        durationSec: 215,
+      ),
+      MusicTrackModel(
+        id: 'trk-5',
+        title: 'Halaman terakhir sebelum kuis',
+        artist: 'Ruang Belajar · Biologi',
+        playlistName: 'Biologi · Piano tenang',
+        subjectColorKey: 'biologi',
+        sourceType: 'bundled',
+        uri: 'assets/audio/perpustakaan_sore.wav',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
+        durationSec: 201,
+      ),
+      MusicTrackModel(
+        id: 'trk-6',
+        title: 'Fokus tanpa distraksi',
+        artist: 'Stabilo Kuning · Bahasa',
+        playlistName: 'Bahasa · Instrumental hangat',
+        subjectColorKey: 'bahasa',
+        sourceType: 'bundled',
+        uri: 'assets/audio/hujan_ambient.wav',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
+        durationSec: 178,
+      ),
+      MusicTrackModel(
+        id: 'trk-7',
+        title: 'Menjelang subuh',
+        artist: 'Hening · Pendidikan Agama',
+        playlistName: 'Pendidikan Agama · Instrumental teduh',
+        subjectColorKey: 'agama',
+        sourceType: 'bundled',
+        uri: 'assets/audio/perpustakaan_sore.wav',
+        licenseNote: 'CC0 1.0 Public Domain Dedication',
+        durationSec: 242,
       ),
     ];
 
@@ -520,6 +582,9 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       isMiniPlayerVisible: true,
       sleepTimerMinutes: null,
       offlineAiQueueCount: 0,
+      openRouterModel: 'google/gemini-2.0-flash-exp:free',
+      openRouterFallbackModel: 'qwen/qwen2.5-vl-72b-instruct:free',
+      hasOpenRouterKey: false,
     );
   }
 
@@ -809,6 +874,65 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       isMiniPlayerVisible: true,
     );
     _audioController.playTrack(state.tracks[index]);
+  }
+
+  /// Menandai atau melepas bookmark ("Tersimpan") pada lagu di sheet musik ala Instagram.
+  void toggleBookmarkTrack(String trackId) {
+    final updated = state.tracks.map((t) {
+      if (t.id != trackId) return t;
+      return t.copyWith(isBookmarked: !t.isBookmarked);
+    }).toList();
+    state = state.copyWith(tracks: updated);
+  }
+
+  /// Menambahkan file musik lokal milik pengguna (`File HP`) ke dalam daftar track.
+  void addLocalAudioTrack({
+    required String title,
+    required String filePath,
+    String subjectColorKey = 'umum',
+  }) {
+    final cleanTitle = title.trim();
+    if (cleanTitle.isEmpty || filePath.trim().isEmpty) return;
+    final newTrack = MusicTrackModel(
+      id: 'trk-local-${DateTime.now().millisecondsSinceEpoch}',
+      title: cleanTitle,
+      artist: 'File audio perangkatmu',
+      playlistName: 'File HP · Milik pengguna',
+      subjectColorKey: subjectColorKey,
+      sourceType: 'local_file',
+      uri: filePath.trim(),
+      licenseNote: 'File pribadi pengguna di perangkat',
+      durationSec: 180,
+      isBookmarked: true,
+    );
+    final updated = [newTrack, ...state.tracks];
+    state = state.copyWith(
+      tracks: updated,
+      currentTrackIndex: 0,
+      isMusicPlaying: true,
+      isMiniPlayerVisible: true,
+    );
+    _audioController.playTrack(newTrack);
+  }
+
+  void setMusicVolume(double volume) {
+    _audioController.setVolume(volume);
+  }
+
+  void setOpenRouterConfig({
+    required String primaryModel,
+    required String fallbackModel,
+    bool? hasKey,
+  }) {
+    state = state.copyWith(
+      openRouterModel: primaryModel.trim().isEmpty
+          ? state.openRouterModel
+          : primaryModel.trim(),
+      openRouterFallbackModel: fallbackModel.trim().isEmpty
+          ? state.openRouterFallbackModel
+          : fallbackModel.trim(),
+      hasOpenRouterKey: hasKey ?? state.hasOpenRouterKey,
+    );
   }
 
   void setMiniPlayerVisible(bool visible) {

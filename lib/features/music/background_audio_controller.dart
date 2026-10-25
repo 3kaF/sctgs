@@ -42,6 +42,9 @@ class BackgroundAudioController {
       if (_player == null) await _initSession();
       if (track.sourceType == 'bundled') {
         await _player?.setAsset(track.uri);
+      } else if (track.uri.startsWith('http://') ||
+          track.uri.startsWith('https://')) {
+        await _player?.setUrl(track.uri);
       } else {
         await _player?.setFilePath(track.uri);
       }

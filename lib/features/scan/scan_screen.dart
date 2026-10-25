@@ -56,8 +56,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     if (_isProcessingImage) return;
     setState(() => _isProcessingImage = true);
 
+    final store = ref.read(appStoreProvider);
     final scannedItems = await _scannerService.pickAndProcessPage(
       source: source,
+      primaryModel: store.openRouterModel,
+      fallbackModel: store.openRouterFallbackModel,
     );
     if (!mounted) return;
     setState(() => _isProcessingImage = false);

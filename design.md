@@ -229,9 +229,13 @@ Double tap tidak dipakai. Tidak ada gestur yang hanya bisa dilakukan satu cara.
 ## 10. Musik
 
 - Mini player melayang di atas navigasi bawah, bisa disembunyikan.
-- Sheet musik: playlist per mapel, volume, pengatur waktu tidur. Tidak ada sampul album besar.
+- Sheet musik bergaya pemilih audio Instagram:
+  - Drag handle di atas + kolom pencarian bulat (`Cari...`).
+  - Empat pill tab filter horizontal (`Untuk kamu`, `Per mapel`, `Tersimpan`, `File HP`), dengan tab aktif berwarna kontras terang (`ink` dengan teks `bg`).
+  - Daftar track vertikal: thumbnail kotak kecil 48×48 dp (radius 8 dp) di kiri, judul track (tebal) + subjudul `artis/suasana • durasi (m:ss)` di tengah, dan tombol ikon Bookmark (`Tersimpan`) di kanan.
+  - Kontrol tambahan yang ringkas: volume, pengatur waktu tidur (sleep timer), dan tombol tambah file audio dari HP pada tab `File HP`.
 - Volume turun otomatis saat ada notifikasi atau telepon (ducking). Musik berhenti sendiri saat sesi berakhir bila pengatur waktu aktif.
-- Sumber: file milik pengguna dan beberapa track bebas royalti. Tampilkan nama sumber dan lisensi track bawaan di halaman Tentang.
+- Sumber: file milik pengguna, track bawaan, dan katalog streaming lo-fi/ambient bebas royalti (CC0). Tampilkan nama sumber dan lisensi track bawaan di halaman Tentang.
 
 ## 11. Bahasa antarmuka
 
