@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/grade_bar.dart';
 import '../../core/widgets/verdict_tag.dart';
 import '../../features/ai/ai_cross_verifier.dart';
+import '../../features/music/background_audio_controller.dart';
+import '../../features/review/daily_reminder_service.dart';
 import '../../features/review/sm2_scheduler.dart';
 import '../local/local_storage_service.dart';
 import '../local/models.dart';
@@ -132,7 +134,11 @@ class AppStoreState {
 
 /// Notifier utama yang mengelola state Offline-First aplikasi TugasScroll.
 class AppStoreNotifier extends StateNotifier<AppStoreState> {
-  AppStoreNotifier() : super(_createInitialSeededState());
+  AppStoreNotifier()
+      : _audioController = BackgroundAudioController(),
+        super(_createInitialSeededState());
+
+  final BackgroundAudioController _audioController;
 
   static AppStoreState _createInitialSeededState() {
     final now = DateTime.now();
@@ -468,7 +474,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
         playlistName: 'Matematika · Lo-fi tenang',
         subjectColorKey: 'matematika',
         sourceType: 'bundled',
-        uri: 'assets/audio/lofi_malam.ogg',
+        uri: 'assets/audio/lofi_malam.wav',
         licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
         durationSec: 164,
       ),
@@ -478,7 +484,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
         playlistName: 'Kimia · Ambient fokus',
         subjectColorKey: 'kimia',
         sourceType: 'bundled',
-        uri: 'assets/audio/hujan_ambient.ogg',
+        uri: 'assets/audio/hujan_ambient.wav',
         licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
         durationSec: 192,
       ),
@@ -488,7 +494,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
         playlistName: 'Membaca panjang · Akustik',
         subjectColorKey: 'ips',
         sourceType: 'bundled',
-        uri: 'assets/audio/perpustakaan_sore.ogg',
+        uri: 'assets/audio/perpustakaan_sore.wav',
         licenseNote: 'CC0 1.0 Public Domain Dedication — TugasScroll Studio',
         durationSec: 148,
       ),
@@ -783,10 +789,16 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
 
   // Kontrol Musik Latar (Bagian 6.7 PRD & Bagian 10 design.md)
   void toggleMusicPlay() {
+    final bool nextPlaying = !state.isMusicPlaying;
     state = state.copyWith(
-      isMusicPlaying: !state.isMusicPlaying,
+      isMusicPlaying: nextPlaying,
       isMiniPlayerVisible: true,
     );
+    if (nextPlaying) {
+      _audioController.playTrack(state.currentTrack);
+    } else {
+      _audioController.pause();
+    }
   }
 
   void selectTrack(int index) {
@@ -796,6 +808,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       isMusicPlaying: true,
       isMiniPlayerVisible: true,
     );
+    _audioController.playTrack(state.tracks[index]);
   }
 
   void setMiniPlayerVisible(bool visible) {
@@ -822,8 +835,13 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
   void setSessionCardLimit(int limit) =>
       state = state.copyWith(sessionCardLimit: limit);
 
-  void setReminderTime(String time) =>
-      state = state.copyWith(reminderTime: time);
+  void setReminderTime(String time) {
+    state = state.copyWith(reminderTime: time);
+    DailyReminderService.scheduleOrShowDueReminder(
+      dueCardCount: state.totalDueCards(DateTime.now()),
+      quietHoursEnabled: state.quietHoursEnabled,
+    );
+  }
 
   void completeOnboarding({required String educationLevel}) {
     state = state.copyWith(

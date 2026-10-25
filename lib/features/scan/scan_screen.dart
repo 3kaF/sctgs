@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/ts_palette.dart';
 import '../../core/theme/ts_typography.dart';
@@ -9,6 +10,7 @@ import '../../core/widgets/subject_cover.dart';
 import '../../data/local/models.dart';
 import '../../data/repositories/app_store_provider.dart';
 import '../ai/ai_cross_verifier.dart';
+import 'document_scanner_service.dart';
 
 /// Layar **Scan Tugas** dan **Cek Hasil Scan** sesuai Bagian 6.2 PRD & Bagian 7.3 `design.md`:
 /// - Layar Kamera: cincin shutter tebal polos berwarna kapur (`ink`), tanpa cahaya neon,
@@ -30,6 +32,8 @@ class ScanScreen extends ConsumerStatefulWidget {
 }
 
 class _ScanScreenState extends ConsumerState<ScanScreen> {
+  final DocumentScannerService _scannerService = DocumentScannerService();
+  bool _isProcessingImage = false;
   bool _inReviewStep = false;
   bool _photoPreviewCollapsed = false;
   int _capturedPageCount = 1;
@@ -48,26 +52,33 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     super.dispose();
   }
 
-  void _simulateCaptureAndReadWithAi() {
+  Future<void> _captureAndReadWithAi(ImageSource source) async {
+    if (_isProcessingImage) return;
+    setState(() => _isProcessingImage = true);
+
+    final scannedItems = await _scannerService.pickAndProcessPage(
+      source: source,
+    );
+    if (!mounted) return;
+    setState(() => _isProcessingImage = false);
+
+    if (scannedItems == null || scannedItems.isEmpty) return;
+
     for (final e in _entries) {
       e.dispose();
     }
     setState(() {
       _inReviewStep = true;
-      _entries = [
-        _EditableScanEntry(
-          question: r'Turunan dari $f(x) = 3x^2 + 2x$ adalah ...',
-          userAnswer: r"$f'(x) = 6x + 2$",
-          confidence: 0.92,
-          lowConfidenceParts: const [],
-        ),
-        _EditableScanEntry(
-          question: r'Tentukan nilai $f(x) = x^3 - 4x$ saat $x = 2$',
-          userAnswer: r'$f(2) = 8 - 8 = 0$',
-          confidence: 0.71,
-          lowConfidenceParts: const ['x^3 - 4x'],
-        ),
-      ];
+      _entries = scannedItems
+          .map(
+            (item) => _EditableScanEntry(
+              question: item.question,
+              userAnswer: item.userAnswer,
+              confidence: item.confidence,
+              lowConfidenceParts: item.lowConfidenceParts,
+            ),
+          )
+          .toList();
     });
   }
 
@@ -201,7 +212,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                     children: [
                       // Pilih dari galeri
                       OutlinedButton.icon(
-                        onPressed: _simulateCaptureAndReadWithAi,
+                        onPressed: () =>
+                            _captureAndReadWithAi(ImageSource.gallery),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: palette.ink,
                           minimumSize: const Size(110, 48),
@@ -222,7 +234,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                         button: true,
                         label: 'Ambil foto lembar tugas',
                         child: GestureDetector(
-                          onTap: _simulateCaptureAndReadWithAi,
+                          onTap: () =>
+                              _captureAndReadWithAi(ImageSource.camera),
                           child: Container(
                             width: 72,
                             height: 72,
