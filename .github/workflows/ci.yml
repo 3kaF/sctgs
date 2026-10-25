@@ -1,14 +1,15 @@
-name: TugasScroll CI
+name: TugasScroll CI (Build APK & AAB)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  analyze_and_test:
-    name: Analyze, Test & Build AAB
+  build_android:
+    name: Analyze, Test & Build APK/AAB
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -26,21 +27,31 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate Android platform files if missing
+        run: |
+          flutter config --no-analytics
+          mkdir -p assets/fonts assets/audio
+          touch assets/fonts/.gitkeep assets/audio/.gitkeep
+          if [ ! -d "android" ]; then
+            flutter create --platforms=android --org id.tugasscroll --project-name tugasscroll .
+          fi
+
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Verify formatting and lints
-        run: flutter analyze
 
       - name: Run Unit & Widget Tests
         run: flutter test
 
-      - name: Build Release AppBundle (Obfuscated)
-        if: github.ref == 'refs/heads/main'
+      - name: Build Debug & Release APK (Siap Install di HP)
         run: |
-          flutter config --no-analytics
-          # Jika direktori platform android belum digenerate di repo, buat otomatis saat CI berjalan:
-          if [ ! -d "android" ]; then
-            flutter create --platforms=android --org id.tugasscroll .
-          fi
-          flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+          flutter build apk --debug
+          flutter build apk --release --obfuscate --split-debug-info=build/symbols
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tugasscroll-apk
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
