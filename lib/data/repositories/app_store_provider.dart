@@ -4,6 +4,7 @@ import '../../core/widgets/grade_bar.dart';
 import '../../core/widgets/verdict_tag.dart';
 import '../../features/ai/ai_cross_verifier.dart';
 import '../../features/review/sm2_scheduler.dart';
+import '../local/local_storage_service.dart';
 import '../local/models.dart';
 
 /// State utama aplikasi (Offline-First Repository State).
@@ -537,6 +538,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
     }).toList();
 
     state = state.copyWith(cards: updatedCards);
+    LocalStorageService.saveCardProgress(updatedCards);
   }
 
   /// Menandai atau melepas tanda stabilo penting pada kartu (`isStarred`).
@@ -546,6 +548,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       return card.copyWith(isStarred: !card.isStarred);
     }).toList();
     state = state.copyWith(cards: updatedCards);
+    LocalStorageService.saveCardProgress(updatedCards);
   }
 
   /// Melaporkan kartu yang keliru agar disembunyikan dari feed dan dicatat untuk perbaikan prompt.
@@ -555,6 +558,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       return card.copyWith(reported: true);
     }).toList();
     state = state.copyWith(cards: updatedCards);
+    LocalStorageService.saveCardProgress(updatedCards);
   }
 
   /// Menimpa verdict AI oleh pengguna ("Jawaban saya benar menurut guru" / "Memang salah").
@@ -766,6 +770,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
     }
 
     state = state.copyWith(notes: updatedNotes, cards: updatedCards);
+    LocalStorageService.saveNotes(updatedNotes);
   }
 
   void deleteNote(String noteId) {
@@ -839,6 +844,7 @@ class AppStoreNotifier extends StateNotifier<AppStoreState> {
       notes: const [],
       offlineAiQueueCount: 0,
     );
+    LocalStorageService.clearAll();
   }
 }
 

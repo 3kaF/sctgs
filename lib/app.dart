@@ -12,6 +12,7 @@ import 'features/notes/notes_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/scan/scan_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/stats/stats_screen.dart';
 
 /// Root widget aplikasi **TugasScroll** sesuai `prd.md` (v2.0) dan `design.md` (v1.0).
 class TugasScrollApp extends ConsumerWidget {
@@ -94,6 +95,9 @@ class _TugasScrollShellState extends ConsumerState<TugasScrollShell> {
       ),
       3 => const NotesScreen(),
       4 => const SettingsScreen(),
+      5 => StatsScreen(
+        onStartStudyForSubject: _navigateToFeedWithSubject,
+      ),
       _ => FeedScreen(
         initialSubjectId: _feedSubjectFilter,
         onNavigateToScan: _navigateToScan,
@@ -124,6 +128,14 @@ class _TugasScrollShellState extends ConsumerState<TugasScrollShell> {
                 color: palette.pencil,
               ),
             ),
+          IconButton(
+            onPressed: () => setState(() => _selectedTabIndex = 5),
+            tooltip: 'Ringkasan belajar',
+            icon: Icon(
+              PhosphorIconsRegular.chartBar,
+              color: _selectedTabIndex == 5 ? palette.stabilo : palette.ink,
+            ),
+          ),
           IconButton(
             onPressed: () => setState(() => _selectedTabIndex = 4),
             tooltip: 'Pengaturan',
