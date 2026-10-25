@@ -37,6 +37,41 @@ jobs:
             flutter create --platforms=android --org id.tugasscroll --project-name tugasscroll .
             rm -f test/widget_test.dart
           fi
+          python3 - << 'EOF'
+          import os, re
+          for p in ["android/app/build.gradle", "android/app/build.gradle.kts"]:
+              if os.path.exists(p):
+                  with open(p, "r") as f:
+                      c = f.read()
+                  c = re.sub(r"minSdk\s*=\s*flutter\.minSdkVersion", "minSdk = 26", c)
+                  c = re.sub(r"minSdkVersion\s+flutter\.minSdkVersion", "minSdkVersion 26", c)
+                  c = re.sub(r"compileSdk\s*=\s*flutter\.compileSdkVersion", "compileSdk = 35", c)
+                  c = re.sub(r"compileSdkVersion\s+flutter\.compileSdkVersion", "compileSdkVersion 35", c)
+                  if "coreLibraryDesugaring" not in c:
+                      if p.endswith(".kts"):
+                          c = c.replace("compileOptions {", "compileOptions {\n        isCoreLibraryDesugaringEnabled = true")
+                          c += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+                      else:
+                          c = c.replace("compileOptions {", "compileOptions {\n        coreLibraryDesugaringEnabled true")
+                          c += "\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
+                  with open(p, "w") as f:
+                      f.write(c)
+                  print(f"Patched {p}:")
+                  print(c)
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          if os.path.exists(manifest_path):
+              with open(manifest_path, "r") as f:
+                  m = f.read()
+              if "android.permission.CAMERA" not in m:
+                  perms = """    <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+              <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n"""
+                  m = m.replace("<application", perms + "    <application", 1)
+                  with open(manifest_path, "w") as f:
+                      f.write(m)
+          EOF
 
       - name: Install dependencies
         run: flutter pub get
