@@ -97,7 +97,7 @@ class RichStudyText extends StatelessWidget {
       }
 
       final rawFormula = match.group(0)!;
-      final cleanFormula = rawFormula.startsWith('$\$')
+      final cleanFormula = rawFormula.startsWith(r'$$')
           ? rawFormula.substring(2, rawFormula.length - 2).trim()
           : rawFormula.substring(1, rawFormula.length - 1).trim();
 

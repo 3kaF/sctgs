@@ -17,12 +17,12 @@ class BackgroundAudioController {
     try {
       final session = await AudioSession.instance;
       await session.configure(
-        const AudioSessionConfiguration(
+        AudioSessionConfiguration(
           avAudioSessionCategory: AVAudioSessionCategory.playback,
           avAudioSessionCategoryOptions:
               AVAudioSessionCategoryOptions.mixWithOthers |
               AVAudioSessionCategoryOptions.duckOthers,
-          androidAudioAttributes: AndroidAudioAttributes(
+          androidAudioAttributes: const AndroidAudioAttributes(
             contentType: AndroidAudioContentType.music,
             usage: AndroidAudioUsage.media,
           ),

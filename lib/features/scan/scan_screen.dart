@@ -192,7 +192,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   Column(
                     children: [
                       Icon(
-                        PhosphorIconsRegular.FileText,
+                        PhosphorIconsRegular.fileText,
                         size: 48,
                         color: palette.pencil,
                       ),

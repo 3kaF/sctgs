@@ -70,10 +70,6 @@ class PaperBackgroundPainter extends CustomPainter {
 }
 
 /// Painter untuk coretan pulpen koreksi bergelombang (`pen-red`) di bawah langkah yang keliru (Bagian 7.1 design.md).
-class WavyUnderlinePainter extends CustomPainter {
-  const FreehandWaveConfig();
-}
-
 class CorrectionWavePainter extends CustomPainter {
   const CorrectionWavePainter({required this.color});
 
